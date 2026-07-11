@@ -1,7 +1,7 @@
 # Chatbot de IA (Parcial 3)
 
    (\_/)
-  ( •_•)   <-- mapache pixel
+  ( •_•)  
   / >(o)
 
 Chatbot de IA construido siguiendo el curso **Python for AI** y la
