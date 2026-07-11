@@ -17,32 +17,31 @@ documentación de **Datalumina Functions**.
 - pip
 - `datalumina-functions` (y `requests`)
 
-## Instalación
+## Cómo ejecutarlo (recomendado)
+
+**Doble clic en `ejecutar.bat`** (Windows). Crea el entorno, instala
+las dependencias y corre el bot. **No usa PowerShell**, así que no
+aparece el error de permisos ("execution of scripts is disabled").
+
+## Instalación manual
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/Chrisavt/chatbot-parcial3.git
 cd chatbot-parcial3
 
-# 2. Crear y activar entorno virtual
+# 2. Crear entorno virtual
 python -m venv .venv
-source .venv/bin/activate        # Linux / WSL
-# .venv\Scripts\Activate.ps1         # Windows (PowerShell)
 
-# 3. Instalar dependencias
-pip install -r requirements.txt
+# 3. Instalar dependencias (sin activar el entorno)
+.venv\Scripts\pip install -r requirements.txt
+
+# 4. Ejecutar el bot (Python directo, sin Activate.ps1)
+.venv\Scripts\python.exe -m src.bot
 ```
 
-## Uso
-
-**Forma fácil (doble clic):** abre `ejecutar.bat`. Crea el
-entorno, instala dependencias y corre el bot. No requiere PowerShell
-ni permisos especiales.
-
-**Forma manual:**
-```bash
-python -m src.bot
-```
+Nota: no se usa `Activate.ps1` a propósito, porque PowerShell lo
+bloquea por defecto. Llamar a `python.exe` directo evita ese error.
 
 Ejemplos de comandos:
 
