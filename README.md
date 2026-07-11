@@ -15,7 +15,10 @@ documentación de **Datalumina Functions**.
 ## Requisitos
 - Python 3.x
 - pip
-- `openai` (opcional: para IA real con OPENAI_API_KEY)
+- `openai` (IA real con OpenAI o Groq; Groq usa la misma libreria)
+- `huggingface_hub` (opcional: IA gratis con token de Hugging Face)
+- Para respuestas de IA metes tu token una vez con el comando `/token`
+  (Groq es gratis). Se guarda local en `config.json` y no se sube a GitHub.
 
 ## Cómo ejecutarlo (recomendado)
 
@@ -52,12 +55,35 @@ Ejemplos de comandos:
 /ask hola
 /ask como te llamas?
 /ask que hora es
+/token hf_xxxxxxxxxxxxxxxx   (activa la IA con token gratis)
+/ask que es una red neuronal?   (responde la IA)
 ```
 
 Escribe `exit` para salir.
 
-Si no hay `OPENAI_API_KEY`, el bot usa un cerebro local
-(saludos, nombre, hora, fecha y calculos) y no crashea.
+## Activar la IA con tu token
+
+El bot no trae token embebido (GitHub bloquea subir secretos), pero lo
+activas en segundos. Mete tu token una vez con el comando `/token`
+dentro del bot y queda guardado en `config.json`:
+
+```
+/token gsk_xxxxxxxxxxxxxxxx   (Groq, gratis)
+/token sk-xxxxxxxxxxxxxxxx    (OpenAI)
+/token hf_xxxxxxxxxxxxxxxx    (Hugging Face, token GRATIS)
+```
+
+- `gsk_...` -> **Groq** (modelo Llama 3.3, gratis).
+- `sk-...`  -> **OpenAI** (gpt-4o-mini).
+- otro     -> **Hugging Face** (token gratis en
+  https://huggingface.co/settings/tokens).
+- El token se guarda en `config.json` (archivo local, ignorado por
+  git, asi NO se sube a GitHub). La proxima vez que abras el bot ya
+  estara conectado.
+- Tambien puedes usar variables de entorno: `OPENAI_API_KEY` o `HF_TOKEN`.
+
+Sin token el bot no crashea: avisa como activarlo y sigue respondiendo
+lo local (saludos, nombre, hora, fecha y calculos).
 
 ## Estructura
 
@@ -77,7 +103,8 @@ chatbot-parcial3/
 ## Notas
 - Cada interacción se registra en `logs.txt`.
 - El bot funciona sin internet: responde saludos, su nombre,
-  la hora, la fecha y calculos matematicos. Con `OPENAI_API_KEY`
-  configurada, usa el modelo de IA real (OpenAI).
+  la hora, la fecha y calculos matematicos. Con un token de IA
+  (Groq/OpenAI/Hugging Face) activado via `/token`, responde
+  cualquier pregunta con el modelo real.
 
 Gracias quien sea que vea esto :3

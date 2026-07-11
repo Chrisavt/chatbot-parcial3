@@ -5,21 +5,98 @@ import json
 import operator
 from datetime import datetime
 
-# La IA externa (OpenAI) es opcional. Si hay una API key en la variable
-# de entorno OPENAI_API_KEY, el bot responde con el modelo real; si no,
-# usa un cerebro local que sigue funcionando al 100%.
+# --- Clientes de IA opcionales (no bloquean el arranque si faltan) ---
 try:
     from openai import OpenAI
-    _client = OpenAI() if os.getenv("OPENAI_API_KEY") else None
 except Exception:  # noqa: BLE001
-    _client = None
+    OpenAI = None
 
-# Pixel-art mapache (raccoon) para la interfaz de inicio
+try:
+    from huggingface_hub import InferenceClient
+except Exception:  # noqa: BLE001
+    InferenceClient = None
+
+# Pixel-art mapache para la interfaz de inicio
 MAPACHE = r"""
    (\_/)
   ( o_o )
   / >(o)
 """
+
+CONFIG_PATH = "config.json"
+GROQ_URL = "https://api.groq.com/openai/v1"
+GROQ_MODEL = "llama-3.3-70b-versatile"
+OPENAI_MODEL = "gpt-4o-mini"
+HF_MODEL = "HuggingFaceH4/zephyr-7b-beta"
+
+# Token por defecto: None. El token se pone en config.json (local, no se
+# sube a GitHub) o con el comando /token. Asi el secreto no queda en el codigo.
+TOKEN_POR_DEFECTO = None
+
+# Estado global del cliente de IA
+_cliente = None
+_proveedor = None
+
+
+def cargar_config():
+    try:
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def guardar_config(cfg):
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+def _crear_cliente(token):
+    """Devuelve (cliente, proveedor) segun el prefijo del token."""
+    t = (token or "").strip()
+    if t.lower().startswith("gsk_") and OpenAI is not None:
+        return OpenAI(api_key=t, base_url=GROQ_URL), "groq"
+    if t.lower().startswith("sk-") and OpenAI is not None:
+        return OpenAI(api_key=t), "openai"
+    if InferenceClient is not None:
+        return InferenceClient(token=t or None), "huggingface"
+    return None, None
+
+
+def configurar_token(token):
+    """Guarda el token, detecta el proveedor y crea el cliente de IA."""
+    global _cliente, _proveedor
+    token = (token or "").strip()
+    if not token:
+        return ("[!] Escribe el token despues de /token. Ej:\n"
+                "      /token gsk_xxxx  (Groq)\n"
+                "      /token sk-xxxx   (OpenAI)\n"
+                "      /token hf_xxxx   (Hugging Face, gratis)")
+    cfg = cargar_config()
+    cliente, prov = _crear_cliente(token)
+    if cliente is None:
+        return ("[X] No se pudo crear el cliente de IA. Instala las "
+                "dependencias: .venv\\Scripts\\pip install -r requirements.txt")
+    _cliente, _proveedor = cliente, prov
+    cfg["token"] = token
+    cfg["proveedor"] = prov
+    guardar_config(cfg)
+    nombres = {"openai": "OpenAI", "groq": "Groq", "huggingface": "Hugging Face"}
+    return f"[OK] Token listo. El bot ahora responde con IA ({nombres[prov]})."
+
+
+def cargar_token_guardado():
+    """Al arrancar usa: config.json > variable de entorno > token por defecto."""
+    global _cliente, _proveedor
+    cfg = cargar_config()
+    token = (cfg.get("token")
+             or os.getenv("OPENAI_API_KEY")
+             or os.getenv("HF_TOKEN")
+             or TOKEN_POR_DEFECTO)
+    cliente, prov = _crear_cliente(token)
+    if cliente is not None:
+        _cliente, _proveedor = cliente, prov
+
 
 # --- Calculadora segura (sin usar eval) ---
 _OPS = {
@@ -45,8 +122,28 @@ def _eval_node(node):
 
 def calcular(expr: str):
     """Evalua una expresion matematica de forma segura."""
-    tree = ast.parse(expr, mode="eval")
-    return _eval_node(tree.body)
+    return _eval_node(ast.parse(expr, mode="eval").body)
+
+
+def _preguntar_ia(q: str) -> str:
+    """Llama al modelo de IA configurado y devuelve la respuesta."""
+    try:
+        if _proveedor in ("openai", "groq"):
+            model = OPENAI_MODEL if _proveedor == "openai" else GROQ_MODEL
+            resp = _cliente.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": q}],
+            )
+            return resp.choices[0].message.content.strip()
+        # Hugging Face (modelo de chat gratuito via Inference API)
+        prompt = (f"Eres Mapache Bot, un asistente de IA util y amable. "
+                  f"Responde en espanol.\nUsuario: {q}\nAsistente:")
+        out = _cliente.text_generation(
+            prompt, model=HF_MODEL, max_new_tokens=250, temperature=0.7,
+        )
+        return out.strip()
+    except Exception as e:  # noqa: BLE001
+        return f"[ERROR] La IA fallo: {e}"
 
 
 def responder(query: str) -> str:
@@ -54,7 +151,7 @@ def responder(query: str) -> str:
     q = query.strip()
     low = q.lower()
 
-    # 1) Calculo matematico
+    # 1) Calculo matematico (local, exacto y rapido)
     expr = q.replace("^", "**")
     if any(c.isdigit() for c in expr) and re.fullmatch(r"[0-9\.\s\+\-\*\/\%\(\)]+", expr):
         try:
@@ -62,7 +159,7 @@ def responder(query: str) -> str:
         except Exception:  # noqa: BLE001
             pass
 
-    # 2) Respuestas locales
+    # 2) Respuestas locales rapidas
     if any(w in low for w in ["hola", "buenos dias", "buenas", "que tal"]):
         return "Hola, soy Mapache Bot. Como te puedo ayudar?"
     if "como te llamas" in low or "tu nombre" in low or "quien eres" in low:
@@ -72,23 +169,18 @@ def responder(query: str) -> str:
     if "fecha" in low or "que dia es" in low:
         return f"Hoy es {datetime.now().strftime('%d/%m/%Y')}."
 
-    # 3) Modelo de IA real (si hay API key configurada)
-    if _client is not None:
-        try:
-            resp = _client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": q}],
-            )
-            return resp.choices[0].message.content.strip()
-        except Exception as e:  # noqa: BLE001
-            return f"[ERROR] No pude contactar el modelo de IA: {e}"
+    # 3) IA real (si hay token configurado)
+    if _cliente is not None:
+        return _preguntar_ia(q)
 
-    # 4) Fallback (sin API key)
-    return (
-        "Puedo responder saludos, mi nombre, la hora, la fecha y calculos "
-        "matematicos (ej: /ask 25*4). Para respuestas de IA general, "
-        "configura la variable OPENAI_API_KEY."
-    )
+    # 4) Sin token: avisa como activarla
+    return ("Todavia no tengo IA configurada. Activala asi:\n"
+            "  /token <tu_token>\n"
+            "  - 'gsk_...' -> Groq\n"
+            "  - 'sk-...'  -> OpenAI\n"
+            "  - otro      -> Hugging Face (gratis en huggingface.co/settings/tokens)\n"
+            "Mientras tanto respondo saludos, mi nombre, la hora,\n"
+            "la fecha y calculos (ej: /ask 25*4).")
 
 
 class ChatBot:
@@ -97,23 +189,30 @@ class ChatBot:
     def __init__(self, log_path: str = "logs.txt"):
         self.log_path = log_path
 
-    def ask(self, question: str) -> str:
-        """Procesa un comando /ask y devuelve la respuesta."""
-        if not question.startswith("/ask"):
-            return "[X] Solo acepto comandos del tipo '/ask [pregunta]'"
-        query = question[4:].strip()
+    def ask(self, command: str) -> str:
+        """Procesa los comandos /token y /ask."""
+        # Comando para meter el token de IA en caliente
+        if command.startswith("/token"):
+            return configurar_token(command[6:].strip())
+        if not command.startswith("/ask"):
+            return ("[X] Comandos:\n"
+                    "      '/ask <pregunta>'  -> pregunta al bot\n"
+                    "      '/token <tu_token>' -> activa la IA\n"
+                    "      'exit'             -> salir")
+        query = command[4:].strip()
         if not query:
             return "[!] Escribe algo despues de /ask. Ej: /ask hola"
         return responder(query)
 
     def run(self):
         """Bucle principal interactivo."""
+        cargar_token_guardado()
         print(MAPACHE)
-        if _client is None:
-            print("[INFO] Modo local (sin OPENAI_API_KEY): respuestas basicas + calculos.")
+        if _cliente is None:
+            print("[INFO] Modo local. Activa la IA con: /token <tu_token>")
         else:
-            print("[INFO] Modo IA conectado (OpenAI).")
-        print("Chatbot de IA listo. Escribe '/ask <pregunta>' o 'exit' para salir.")
+            print(f"[INFO] IA conectada ({_proveedor}). Listo para responder.")
+        print("Escribe '/ask <pregunta>', '/token <tu_token>' o 'exit'.")
         while True:
             try:
                 user_input = input("> ").strip()
