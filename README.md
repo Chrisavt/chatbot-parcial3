@@ -37,11 +37,13 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 
 # 4. Ejecutar el bot (Python directo, sin Activate.ps1)
-.venv\Scripts\python.exe -m src.bot
+.venv\Scripts\python.exe src/bot.py
 ```
 
 Nota: no se usa `Activate.ps1` a propósito, porque PowerShell lo
 bloquea por defecto. Llamar a `python.exe` directo evita ese error.
+Se ejecuta `src/bot.py` como archivo (no con `-m`) para evitar el
+`RuntimeWarning` de importacion del paquete.
 
 Ejemplos de comandos:
 
