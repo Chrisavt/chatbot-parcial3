@@ -1,2 +1,1 @@
-datalumina-functions
-requests
+openai

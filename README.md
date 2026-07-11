@@ -15,7 +15,7 @@ documentación de **Datalumina Functions**.
 ## Requisitos
 - Python 3.x
 - pip
-- `datalumina-functions` (y `requests`)
+- `openai` (opcional: para IA real con OPENAI_API_KEY)
 
 ## Cómo ejecutarlo (recomendado)
 
@@ -46,15 +46,16 @@ bloquea por defecto. Llamar a `python.exe` directo evita ese error.
 Ejemplos de comandos:
 
 ```
-/ask clima Madrid
-/ask calcular 25*4
-/ask traducir hola a inglés
+/ask 25*4
+/ask hola
+/ask como te llamas?
+/ask que hora es
 ```
 
 Escribe `exit` para salir.
 
-Si la librería `datalumina` no está instalada, el bot entra en
-**modo demo** y devuelve respuestas simuladas en lugar de crashear.
+Si no hay `OPENAI_API_KEY`, el bot usa un cerebro local
+(saludos, nombre, hora, fecha y calculos) y no crashea.
 
 ## Estructura
 
@@ -73,8 +74,8 @@ chatbot-parcial3/
 
 ## Notas
 - Cada interacción se registra en `logs.txt`.
-- Las funciones disponibles dependen de lo publicado en
-  https://python.datalumina.com/functions; si una no existe, el bot
-  devuelve un mensaje de error claro en lugar de crashear.
+- El bot funciona sin internet: responde saludos, su nombre,
+  la hora, la fecha y calculos matematicos. Con `OPENAI_API_KEY`
+  configurada, usa el modelo de IA real (OpenAI).
 
 Gracias quien sea que vea esto :3
