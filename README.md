@@ -20,13 +20,13 @@ documentación de **Datalumina Functions**.
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/chrisamour/chatbot-parcial3.git
+git clone https://github.com/Chrisavt/chatbot-parcial3.git
 cd chatbot-parcial3
 
 # 2. Crear y activar entorno virtual
 python -m venv .venv
 source .venv/bin/activate        # Linux / WSL
-# .venv\Scripts\activate         # Windows (PowerShell)
+# .venv\Scripts\Activate.ps1         # Windows (PowerShell)
 
 # 3. Instalar dependencias
 pip install -r requirements.txt
@@ -34,6 +34,11 @@ pip install -r requirements.txt
 
 ## Uso
 
+**Forma fácil (doble clic):** abre `ejecutar.bat`. Crea el
+entorno, instala dependencias y corre el bot. No requiere PowerShell
+ni permisos especiales.
+
+**Forma manual:**
 ```bash
 python -m src.bot
 ```
@@ -48,6 +53,9 @@ Ejemplos de comandos:
 
 Escribe `exit` para salir.
 
+Si la librería `datalumina` no está instalada, el bot entra en
+**modo demo** y devuelve respuestas simuladas en lugar de crashear.
+
 ## Estructura
 
 ```
@@ -56,6 +64,7 @@ chatbot-parcial3/
 │   ├── __init__.py
 │   ├── bot.py          # Motor del chatbot + mapache pixel
 │   └── utils.py        # Funciones auxiliares
+├── ejecutar.bat        # Lanzador con doble clic (Windows)
 ├── requirements.txt
 ├── README.md
 ├── .gitignore

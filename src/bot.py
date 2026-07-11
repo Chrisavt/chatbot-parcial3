@@ -2,7 +2,25 @@ import os
 import json
 from datetime import datetime
 
-from datalumina import Functions
+# Se intenta usar la libreria real de Datalumina. Si no esta
+# instalada (p.ej. la profe no tiene la dependencia), el bot
+# cae en un modo demo en lugar de crashear.
+try:
+    from datalumina import Functions
+    _MODO_DEMO = False
+except Exception:  # noqa: BLE001
+    _MODO_DEMO = True
+
+    class Functions:
+        """Cliente simulado si 'datalumina' no esta instalado."""
+
+        def __getitem__(self, name):
+            def _call():
+                return (
+                    f"[DEMO] Funcion '{name}' sin Datalumina conectada. "
+                    f"Instala 'datalumina-functions' para datos reales."
+                )
+            return _call
 
 # Pixel-art mapache (raccoon) para la interfaz de inicio
 MAPACHE = r"""
@@ -40,6 +58,8 @@ class ChatBot:
     def run(self):
         """Bucle principal interactivo (estilo Claude Code)."""
         print(MAPACHE)
+        if _MODO_DEMO:
+            print("[DEMO] Datalumina no instalado: respuestas simuladas.")
         print("Chatbot de IA listo. Escribe '/ask <pregunta>' o 'exit' para salir.")
         while True:
             try:
