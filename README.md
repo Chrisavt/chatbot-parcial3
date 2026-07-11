@@ -78,7 +78,4 @@ chatbot-parcial3/
   https://python.datalumina.com/functions; si una no existe, el bot
   devuelve un mensaje de error claro en lugar de crashear.
 
-¡Gracias por usar el chatbot! 
-   (\_/)
-  ( •_•)   <-- mapache pixel
-  / >(o)
+Gracias quien sea que vea esto :3
