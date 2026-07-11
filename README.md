@@ -1,8 +1,9 @@
 # Chatbot de IA (Parcial 3)
 
-   (\_/)
-  ( •_•)  
-  / >(o)
+⠀⠀⢀⡤⢴⠀⠀
+⠀⠀⡎⠐⠐⣑⠆
+⡤⡖⠁⠀⠀⡇⠀
+⠟⠧⠤⠧⠀⠃⠀
 
 Chatbot de IA construido siguiendo el curso **Python for AI** y la
 documentación de **Datalumina Functions**.
