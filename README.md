@@ -55,8 +55,10 @@ Ejemplos de comandos:
 /ask hola
 /ask como te llamas?
 /ask que hora es
-/token hf_xxxxxxxxxxxxxxxx   (activa la IA con token gratis)
+/token gsk_xxxxxxxxxxxxxxxx   (activa la IA con Groq, gratis)
 /ask que es una red neuronal?   (responde la IA)
+/local                       (usa solo respuestas conocidas, sin IA)
+/api                         (vuelve a usar la IA con el token guardado)
 ```
 
 Escribe `exit` para salir.
@@ -81,6 +83,9 @@ dentro del bot y queda guardado en `config.json`:
   git, asi NO se sube a GitHub). La proxima vez que abras el bot ya
   estara conectado.
 - Tambien puedes usar variables de entorno: `OPENAI_API_KEY` o `HF_TOKEN`.
+- Si quieres usar el bot SIN IA (solo las respuestas que ya conoce:
+  saludos, nombre, hora, fecha y calculos), escribe `/local`. Para
+  volver a la IA escribe `/api`.
 
 Sin token el bot no crashea: avisa como activarlo y sigue respondiendo
 lo local (saludos, nombre, hora, fecha y calculos).
